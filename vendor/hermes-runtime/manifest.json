@@ -1,0 +1,8 @@
+{
+  "project": "NousResearch/hermes-agent",
+  "source": "https://github.com/NousResearch/hermes-agent",
+  "revision": "5851be7a132f2edd398624acff9a6f053531612a",
+  "python": "3.14.7",
+  "pythonArchiveSha256": "d297e5ff019966817ad8502465176139f2d3d840fa4ed84b13bed399a6ab1f15",
+  "integration": "AIAgent Python core; application-owned tools; no messaging gateway or cron service"
+}

@@ -1,0 +1,2 @@
+const test=require('node:test'),assert=require('node:assert/strict');const {PreviewCache}=require('../electron/image-previews.cjs');
+test('重复状态同步不重读原图，缓存有上限且可清空',()=>{let loads=0,renders=0;const c=new PreviewCache(x=>{renders++;return 'thumb:'+x},2);const load=()=>{loads++;return [{name:'picture',data:'original'}]};assert.equal(c.get(1,load)[0].data,'thumb:original');c.get(1,load);assert.equal(loads,1);assert.equal(renders,1);c.get(2,load);c.get(3,load);assert.equal(c.cache.size,2);c.get(1,load);assert.equal(loads,4);c.clear();assert.equal(c.cache.size,0);});

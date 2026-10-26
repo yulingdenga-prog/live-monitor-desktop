@@ -1,0 +1,3 @@
+const test=require('node:test'),assert=require('node:assert/strict');const {asksIdentity,identity}=require('../electron/model-identity.cjs');
+test('模型身份问题直接回答配置，推荐和切换仍交给正常流程',()=>{for(const s of ['你是什么模型','现在用哪个模型？','告诉我模型名称','你是GPT吗'])assert.equal(asksIdentity(s),true);for(const s of ['推荐哪个模型','切换成什么模型好','怎么选模型','现在投不投'])assert.equal(asksIdentity(s),false);});
+test('回答只含有效配置身份，不泄漏密钥，也不声称验证中转底层',()=>{const r=identity({provider:'custom',model:'gpt-test',endpoint:'https://example.com/v1',apiKey:'secret'});assert.match(r,/gpt-test/);assert.match(r,/example.com/);assert.match(r,/底层模型由服务商决定/);assert.ok(!r.includes('secret'));assert.match(identity({}),/没有保存模型/);});

@@ -1,0 +1,57 @@
+# Only reviewed project files are eligible for upload.
+/*
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/THIRD_PARTY_NOTICES.md
+!/index.html
+!/package.json
+!/package-lock.json
+!/tsconfig.json
+!/vite.config.ts
+!/electron/
+!/src/
+!/assets/
+/assets/*
+!/assets/icon.ico
+!/assets/logo.png
+!/assets/openclaw-weixin-LICENSE.txt
+!/tests/
+/tests/*
+!/tests/*.test.cjs
+!/docs/
+!/scripts/
+!/vendor/
+/vendor/*
+!/vendor/hermes-runtime/
+/vendor/hermes-runtime/*
+!/vendor/hermes-runtime/manifest.json
+!/vendor/hermes-runtime/dependencies.json
+!/vendor/hermes-runtime/NOTICE.txt
+!/vendor/hermes-runtime/README.md
+!/vendor/hermes-runtime/licenses/
+
+# Credentials, application state, reports and generated files are always local.
+**/node_modules/
+**/.env
+**/.env.*
+**/.git-credentials
+**/AgentWorkspace/
+**/userData/
+**/Cookies*
+**/Local Storage/
+**/Session Storage/
+**/auth.json
+**/credentials.json
+**/*.sqlite*
+**/*.db
+**/*.db-*
+**/*.log
+**/*.pem
+**/*.key
+**/*.pfx
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.DS_Store
+**/Thumbs.db

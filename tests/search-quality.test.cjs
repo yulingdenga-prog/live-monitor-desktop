@@ -1,0 +1,3 @@
+const test=require('node:test'),assert=require('node:assert/strict'),Q=require('../electron/search-quality.cjs');
+test('乘方投放检索补足业务主体，明确数学问题不被改写',()=>{assert.equal(Q.query('乘方投放案例',[{role:'user',content:'学习食品直播投放'}],'继续'),'巨量千川 乘方投放案例');assert.equal(Q.query('乘方计算',[],'解释数学乘方'),'乘方计算');assert.equal(Q.query('乘方',[{role:'user',content:'参考资料直播\n用户问题：介绍数学'}],'介绍数学'),'乘方');});
+test('业务搜索排除明显数学和菜谱结果，保留相关及待阅读候选',()=>{const results=[{title:'数学乘方讲解'},{title:'腊肠家常菜菜谱'},{title:'腊肠直播带货复盘'},{title:'千川投放公式与幂函数'},{title:'商家运营经验'}];assert.deepEqual(Q.filter(results,'食品直播 乘方投放').map(x=>x.title),results.slice(2).map(x=>x.title));assert.equal(Q.filter(results,'数学乘方').length,5);});

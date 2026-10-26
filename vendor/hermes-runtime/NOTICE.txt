@@ -1,0 +1,7 @@
+Hermes Agent: https://github.com/NousResearch/hermes-agent
+Pinned revision: 5851be7a132f2edd398624acff9a6f053531612a
+MIT license: hermes/LICENSE
+Python 3.14.7: python/LICENSE.txt
+Python dependency versions: dependencies.json
+Dependency licenses are retained inside python/Lib/site-packages/*.dist-info.
+Live Monitor uses Hermes AIAgent with an application-owned tool adapter. It does not run the Hermes messaging gateway or cron service.

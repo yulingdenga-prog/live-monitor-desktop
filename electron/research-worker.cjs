@@ -1,0 +1,1 @@
+const {parentPort}=require('node:worker_threads'),net=require('./research-net.cjs');parentPort.on('message',async({type,value})=>{try{if(!['search','read'].includes(type))throw Error('不支持的研究动作');parentPort.postMessage({result:await net[type](value)});}catch(e){parentPort.postMessage({error:e.message});}});

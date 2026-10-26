@@ -1,0 +1,7 @@
+import {RichText} from './rich-text';
+import {ActionButton} from './operations';
+import {ExperienceButton,selectionWithin} from './experience-editor';
+import React,{memo} from 'react';
+export const ChatMessages=memo(function ChatMessages({messages,scope,act,s}:{messages:any[];scope:string;act:any;s:any}){
+ return <>{messages.filter(m=>m.scope===scope).map(m=><div key={m.id} className={'bubble '+m.role}><small>{m.role==='user'?'你':'运营助手'} · {new Date(m.at).toLocaleString('zh-CN')}</small>{m.role==='assistant'?<RichText text={m.content}/>:<div>{m.content}</div>}{m.images?.length>0&&<div className="chat-images">{m.images.map((img:any,i:number)=><img loading="lazy" decoding="async" key={i} src={img.data} alt={img.name} title={img.name}/>)}</div>}<button className="text-button" onMouseDown={e=>e.preventDefault()} onClick={e=>navigator.clipboard.writeText(selectionWithin(e.currentTarget.closest('.bubble'))||m.content)}>复制</button>{m.role==='assistant'&&<><ActionButton message={m} s={s} act={act}/><ExperienceButton origin={{kind:'message',id:m.id}} act={act} container=".bubble"/></>}</div>)}</>;
+},(a,b)=>a.s.shop===b.s.shop&&a.s.context?.scope===b.s.context?.scope&&a.scope===b.scope&&a.messages.length===b.messages.length&&a.messages.every((m,i)=>{const n=b.messages[i];return m.id===n.id&&m.role===n.role&&m.scope===n.scope&&m.at===n.at&&m.content===n.content&&(m.images?.length||0)===(n.images?.length||0)&&(m.images||[]).every((img:any,j:number)=>img.data===n.images[j].data&&img.name===n.images[j].name)}));

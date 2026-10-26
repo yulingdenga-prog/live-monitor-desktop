@@ -1,0 +1,9 @@
+const test=require('node:test'),assert=require('node:assert/strict');const D=require('../electron/domain.cjs');
+test('数字保留口径，缺失不作零',()=>{assert.equal(D.number('1,033.42'),1033.42);assert.equal(D.number('94.61 %'),94.61);assert.equal(D.number('2万'),20000);assert.equal(D.number('—'),null);assert.equal(D.number('2分'),null);});
+test('已知大屏与非大屏页面分别识别',()=>{assert.equal(D.classify('https://qianchuan.jinritemai.com/board-next?live_room_id=1'),'live');assert.equal(D.classify('https://compass.jinritemai.com/a','商品分析'),'product');assert.equal(D.classify('https://example.com'),'unknown');});
+test('北京自然日跨午夜',()=>assert.equal(D.day(Date.parse('2026-10-10T16:00:00Z')),'2026-10-11'));
+const snap=(at,n,mode='live')=>({at,shop:'shop',scope:'room',mode,metrics:[{label:'综合成本(元)',value:n}]});
+test('累计窗口求差而非累加',()=>{const now=Date.now(),rows=Array.from({length:11},(_,i)=>snap(now-300000+i*30000,100+i*2));const r=D.windowDelta(rows,5);assert.equal(r.deltas['综合成本(元)'],20);assert.equal(r.issues.length,0);});
+test('断流、历史口径与重置被标记',()=>{const now=Date.now();const r=D.windowDelta([snap(now-300000,100),snap(now,50,'historical')],5);assert.ok(r.issues.some(x=>x.includes('断流')));assert.ok(r.issues.some(x=>x.includes('回退')));assert.ok(r.issues.includes('非实时口径'));});
+test('建议金额允许未知，禁止错误数值',()=>{const x={action:'观察',amount:null,minutes:5,reason:'等待',evidence:[],improvements:[],recheck:'5分钟'};assert.equal(D.validAdvice(x),x);assert.throws(()=>D.validAdvice({...x,amount:[100,20]}));assert.throws(()=>D.validAdvice({...x,amount:[-1,20]}));});
+test('乘方和罗盘按页面标题及选中页签分类，不跨域误判',()=>{assert.equal(D.classify('https://qianchuan.jinritemai.com/home','巨量千川'),'overview');assert.equal(D.classify('https://compass.jinritemai.com/test','罗盘',['商品分析']),'product');assert.equal(D.classify('https://compass.jinritemai.com/test','罗盘',['流量分析']),'traffic');});

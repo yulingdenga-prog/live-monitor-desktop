@@ -1,0 +1,16 @@
+const test=require('node:test'),assert=require('node:assert/strict');
+const ActualConnected=require('../electron/connected-chat.cjs');const Connected={run:opts=>ActualConnected.run({...opts,prepareTask:async()=>null})};
+const call=(id,name,args)=>({toolCalls:[{id,name,arguments:JSON.stringify(args)}],continuation:[{role:'assistant',content:null,tool_calls:[{id,type:'function',function:{name,arguments:JSON.stringify(args)}}]}]});
+test('无关键词追问仍提供工具，搜索后读取真实正文再作答',async()=>{
+ let n=0,searches=0,reads=0;const r=await Connected.run({text:'继续做',id:'x',messages:[{role:'user',content:'找相关资料'},{role:'assistant',content:'没有联网工具'},{role:'user',content:'继续做'}],model:{config:()=>({protocol:'chat'}),run:async(m,o)=>{if(o.json)return {text:JSON.stringify({usedUrls:['https://example.com/a'],answer:'读到正文'})};assert.equal(o.functions.length,2);n++;if(n===1)return call('s','web_search',{query:'公开主题'});if(n===2){assert.ok(m.some(x=>x.role==='tool'));return call('r','web_read',{url:'https://example.com/a'});}return {text:'读到正文',sources:[]};}},research:{observed:new Map(),search:async()=>{searches++;return {results:[{url:'https://example.com/a',snippet:'摘要'}]};},read:async url=>{reads++;return {url,text:'正文'.repeat(100)};}}});assert.equal(searches,1);assert.equal(reads,1);assert.equal(r.pages.length,1);assert.deepEqual(r.sources,['https://example.com/a']);
+});
+test('普通问答不额外规划，禁止联网也不能执行伪造的工具请求',async()=>{
+ let n=0;const model={config:()=>({protocol:'chat'}),run:async(m,o)=>{n++;assert.equal(o.functions.length,2);return {text:'你好',sources:[]};}};await Connected.run({model,research:{},text:'你好',messages:[]});assert.equal(n,1);
+ n=0;const r=await Connected.run({text:'不要联网',messages:[],model:{config:()=>({protocol:'chat'}),run:async(m,o)=>{assert.equal(o.functions.length,0);return n++===0?call('x','web_search',{query:'a'}):{text:'已离线回答'};}},research:{search:()=>{throw Error('不应调用')}}});assert.match(r.actions[0].error,/禁止联网/);
+});
+test('Responses保留工具续接条目、错误返回模型并能换来源',async()=>{
+ let n=0;const seen=[];const r=await Connected.run({text:'查资料',messages:[],model:{config:()=>({protocol:'responses'}),run:async(m)=>{seen.push(m.map(x=>({...x})));if(n++===0)return {toolCalls:[{id:'c1',name:'web_read',arguments:'{"url":"https://example.com/fail"}'}],continuation:[{type:'reasoning',encrypted_content:'opaque'},{type:'function_call',call_id:'c1',name:'web_read',arguments:'{}'}]};return {text:'该网页HTTP 403，请使用其他来源'};}},research:{read:async()=>{throw Error('网页HTTP 403')}}});assert.ok(seen[1].some(x=>x.type==='reasoning'));assert.ok(seen[1].some(x=>x.type==='function_call_output'&&x.call_id==='c1'&&x.output.includes('403')));assert.equal(r.pages.length,0);
+});
+test('接口明确不支持工具时兼容调用仍执行网络，停止后不继续执行',async()=>{
+ let n=0,searches=0;const r=await Connected.run({text:'查资料',messages:[],model:{config:()=>({protocol:'chat'}),run:async()=>{if(n++===0)throw Error('模型 HTTP 400 unsupported tools');return {text:JSON.stringify(n===2?{tool:'web_search',query:'主题'}:{tool:'answer',text:'查询结束'})};}},research:{search:async()=>{searches++;return {results:[]}}}});assert.equal(searches,1);assert.equal(r.text,require('../electron/research-answer.cjs').EMPTY);await assert.rejects(Connected.run({model:{config:()=>({})},research:{},messages:[],text:'继续',alive:()=>false}),/停止/);
+});

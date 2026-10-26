@@ -1,0 +1,5 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const {systemPrompt,wantsTask}=require('../electron/conversation.cjs');const {Agent}=require('../electron/agent.cjs');
+test('普通问答不误触发采集操作',()=>{for(const t of ['你是什么模型','你好','现在采集到了哪些数据？','解释什么是采集数据','帮我写一首诗'])assert.equal(wantsTask(t),false);for(const t of ['帮我采集商品数据','采集这个页面数据','请把链接里的数据采集出来'])assert.equal(wantsTask(t),true);});
+test('通用聊天提供模型配置并将业务规则限定在相关话题',()=>{const p=systemPrompt({provider:'custom',model:'test-model',endpoint:'https://example.com/v1'},'经营规则');assert.match(p,/test-model/);assert.match(p,/不把话题限制/);assert.match(p,/仅在用户讨论直播/);});
+test('Agent模式普通问题回到API对话，不使用固定拒答',async()=>{const a=new Agent(fs.mkdtempSync(path.join(os.tmpdir(),'conversation-')),()=>{});let calls=0;const r=await a.run({id:'x',text:'你好',shop:'',tabs:[],model:{run:async()=>({text:'{"steps":[]}'})},execute:async()=>{throw Error('不应执行');},converse:async()=>{calls++;return '你好，有什么想聊的？';}});assert.equal(calls,1);assert.equal(r,'你好，有什么想聊的？');});

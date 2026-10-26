@@ -1,0 +1,6 @@
+const Structured=require('./structured-output.cjs'),{userRequest}=require('./search-quality.cjs');
+async function build({model,messages,text,id,previous}){
+ return Structured.request(model,[{role:'system',content:`从用户原话提取这一次检索的任务要求。输出JSON {goal:"具体目标",scope:"行业/平台/场景",dateRequirement:"用户要求的时间或未限定",include:[需要的资料类型和内容],exclude:[用户明确排除或纠正的内容],searchQuery:"第一条具体公共搜索词"}。
+当前请求优先；明确换话题就重建目标，不沿用旧任务。仅“继续”等承接语沿用上次任务与用户历史中的条件。不得凭空增加日期、行业、数量；不要把对话时间当用户指定的文献日期。区分发布时间与事件时间。把歧义词放回业务语境，用公开平台名称和业务动作消歧；搜索词不包含私人身份、店铺名称、金额、凭证。用户要实操经验则要求有具体做法与适用条件，不用新闻、首页、菜谱或数学条目代替。只理解需求，此步不宣称找到了资料或已经学习。`},{role:'user',content:JSON.stringify({previousTask:previous||null,userHistory:messages.filter(m=>m.role==='user').map(userRequest).slice(-6).map(s=>s.slice(-2400)),currentRequest:text})}],{id,validate:x=>{if(!x||['goal','scope','dateRequirement','searchQuery'].some(k=>typeof x[k]!=='string')||!Array.isArray(x.include)||!Array.isArray(x.exclude)||!x.goal.trim()||!x.searchQuery.trim()||x.searchQuery.length>300||JSON.stringify(x).length>5000)throw Error();return {goal:x.goal,scope:x.scope,dateRequirement:x.dateRequirement,include:x.include.filter(s=>typeof s==='string').slice(0,10),exclude:x.exclude.filter(s=>typeof s==='string').slice(0,10),searchQuery:x.searchQuery};}});
+}
+module.exports={build};

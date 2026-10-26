@@ -1,0 +1,6 @@
+const test=require('node:test'),assert=require('node:assert/strict');const K=require('../electron/knowledge.cjs');
+const url='https://school.jinritemai.com/article/1',quote='这是官方原文中明确写出的适用条件与具体要求';const pages=[{url,text:quote}];
+const c={title:'规则一',topic:'投流',text:'具体规则',action:'检查设置',appliesTo:'直播计划',quote,url,usefulness:5};
+test('没有官方原文证据或低价值内容不入库',()=>{assert.equal(K.merge([],[{...c,quote:'不存在的证据并且超过十二字'}, {...c,usefulness:2}],pages).added,0);assert.equal(K.official('https://school.jinritemai.com.evil.com/'),false);});
+test('去重、冲突隔离和过期不注入模型',()=>{const a=K.merge([],[c],pages,1000);assert.equal(a.added,1);assert.equal(K.merge(a.items,[c],pages,2000).added,0);const b=K.merge(a.items,[{...c,text:'不同规则'}],pages,2000);assert.ok(b.items.every(x=>x.status==='conflict'));assert.deepEqual(K.context({get:()=>b.items}),[]);assert.equal(K.merge(a.items,[],[],40*86400000).items[0].status,'expired');});
+test('有效知识上限20，模型上下文上限8',()=>{const old=Array.from({length:25},(_,i)=>({...c,id:String(i),at:Date.now()+i,expiresAt:Date.now()+86400000,status:'active'}));const m=K.merge(old,[],[]);assert.equal(m.items.filter(x=>x.status==='active').length,20);assert.equal(K.context({get:()=>m.items}).length,8);});
